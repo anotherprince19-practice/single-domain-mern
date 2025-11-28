@@ -1,0 +1,8 @@
+
+location /api/ {
+    proxy_pass http://backend:5000/;
+}
+
+location / {
+    proxy_pass http://frontend:3000/;
+}

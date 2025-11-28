@@ -1,0 +1,61 @@
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy:latest
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    networks: [proxy-network]
+
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion:latest
+    container_name: nginx-proxy-acme
+    restart: always
+    environment:
+      DEFAULT_EMAIL: admin@orten.com
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    depends_on:
+      - nginx-proxy
+    networks: [proxy-network]
+
+  backend:
+    build: ./backend
+    environment:
+      VIRTUAL_HOST: mernpracticeapp.sytes.net
+      LETSENCRYPT_HOST: mernpracticeapp.sytes.net
+      LETSENCRYPT_EMAIL: anotherprince19@gmail.com
+      PORT: 5000
+    expose: ["5000"]
+    networks: [proxy-network, app-network]
+
+  frontend:
+    build: ./frontend
+    environment:
+      VIRTUAL_HOST: mernpracticeapp.sytes.net
+      LETSENCRYPT_HOST: mernpracticeapp.sytes.net
+      LETSENCRYPT_EMAIL: anotherprince19@gmail.com
+    expose: ["3000"]
+    networks: [proxy-network, app-network]
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo_data:/data/db
+    networks: [app-network]
+
+networks:
+  proxy-network:
+  app-network:
+
+volumes:
+  mongo_data:
