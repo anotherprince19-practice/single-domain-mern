@@ -1,8 +1,7 @@
 services:
   nginx-proxy:
-    image: jwilder/nginx-proxy:latest
+    image: jwilder/nginx-proxy
     container_name: nginx-proxy
-    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -11,51 +10,62 @@ services:
       - ./certs:/etc/nginx/certs
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
-    networks: [proxy-network]
+    networks:
+      - proxy
 
-  nginx-proxy-acme:
-    image: nginxproxy/acme-companion:latest
+  acme-companion:
+    image: nginxproxy/acme-companion
     container_name: nginx-proxy-acme
-    restart: always
-    environment:
-      DEFAULT_EMAIL: admin@orten.com
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs
-      - ./vhost.d:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
     depends_on:
       - nginx-proxy
-    networks: [proxy-network]
+    environment:
+      - DEFAULT_EMAIL=anotherprince19@gmail.com
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs:rw
+      - ./acme:/etc/acme.sh
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    networks:
+      - proxy
 
   backend:
     build: ./backend
+    container_name: mern-backend
+    expose:
+      - "5000"
     environment:
-      VIRTUAL_HOST: mernpracticeapp.sytes.net
-      LETSENCRYPT_HOST: mernpracticeapp.sytes.net
-      LETSENCRYPT_EMAIL: anotherprince19@gmail.com
-      PORT: 5000
-    expose: ["5000"]
-    networks: [proxy-network, app-network]
+      - VIRTUAL_HOST=mernpracticeapp.sytes.net
+      - LETSENCRYPT_HOST=mernpracticeapp.sytes.net
+      - LETSENCRYPT_EMAIL=anotherprince19@gmail.com
+    networks:
+      - proxy
+      - internal
 
   frontend:
     build: ./frontend
+    container_name: mern-frontend
+    expose:
+      - "80"
     environment:
-      VIRTUAL_HOST: mernpracticeapp.sytes.net
-      LETSENCRYPT_HOST: mernpracticeapp.sytes.net
-      LETSENCRYPT_EMAIL: anotherprince19@gmail.com
-    expose: ["3000"]
-    networks: [proxy-network, app-network]
+      - VIRTUAL_HOST=mernpracticeapp.sytes.net
+      - LETSENCRYPT_HOST=mernpracticeapp.sytes.net
+      - LETSENCRYPT_EMAIL=youremail@example.com
+    networks:
+      - proxy
+      - internal
 
   mongo:
     image: mongo:latest
+    container_name: mern-mongo
     volumes:
       - mongo_data:/data/db
-    networks: [app-network]
-
-networks:
-  proxy-network:
-  app-network:
+    networks:
+      - internal
 
 volumes:
   mongo_data:
+
+networks:
+  proxy:
+  internal:
