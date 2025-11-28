@@ -14,20 +14,22 @@ services:
       - proxy
 
   acme-companion:
-    image: nginxproxy/acme-companion
-    container_name: nginx-proxy-acme
-    depends_on:
-      - nginx-proxy
-    environment:
-      - DEFAULT_EMAIL=anotherprince19@gmail.com
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs:rw
-      - ./acme:/etc/acme.sh
-      - ./vhost.d:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
-    networks:
-      - proxy
+  image: nginxproxy/acme-companion
+  container_name: nginx-proxy-acme
+  depends_on:
+    - nginx-proxy
+  environment:
+    - DEFAULT_EMAIL=youremail@example.com
+    - NGINX_PROXY_CONTAINER=nginx-proxy
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ./certs:/etc/nginx/certs:rw
+    - ./acme:/etc/acme.sh
+    - ./vhost.d:/etc/nginx/vhost.d
+    - ./html:/usr/share/nginx/html
+  networks:
+    - proxy
+
 
   backend:
     build: ./backend
