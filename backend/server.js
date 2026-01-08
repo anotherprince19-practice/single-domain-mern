@@ -12,7 +12,7 @@ mongoose.connect("mongodb://mongo:27017/mernapp")
   .catch(err=>console.log(err));
 
 app.get("/api", (req,res)=>{
-  res.json({msg:"Backend running", time:new Date().toISOString()});
+  res.json({msg:"Backend running successfully", time:new Date().toISOString()});
 });
 
 app.listen(5000, ()=>console.log("Backend on 5000"));
